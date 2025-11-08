@@ -5,13 +5,17 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "ratings")
 public class Rating {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne
     @JoinColumn(name = "idea_id", nullable = false)
     private Idea ideaId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User UserId;
+    private User userId;
 
     @Column(nullable = false)
     private Integer novelty;
@@ -24,9 +28,17 @@ public class Rating {
 
     public Rating(Idea ideaId, User userId, Integer novelty, Integer feasibility) {
         this.ideaId = ideaId;
-        UserId = userId;
+        this.userId = userId;
         this.novelty = novelty;
         this.feasibility = feasibility;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Idea getIdeaId() {
@@ -38,11 +50,11 @@ public class Rating {
     }
 
     public User getUserId() {
-        return UserId;
+        return userId;
     }
 
     public void setUserId(User userId) {
-        UserId = userId;
+        this.userId = userId;
     }
 
     public Integer getNovelty() {
