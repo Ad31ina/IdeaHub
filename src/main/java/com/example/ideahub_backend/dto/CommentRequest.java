@@ -3,13 +3,6 @@ package com.example.ideahub_backend.dto;
 public class CommentRequest {
     private String text;
 
-    public CommentRequest() {
-    }
-
-    public CommentRequest(String text) {
-        this.text = text;
-    }
-
     public String getText() {
         return text;
     }
@@ -18,5 +11,7 @@ public class CommentRequest {
         this.text = text;
     }
 }
+
+
 
 

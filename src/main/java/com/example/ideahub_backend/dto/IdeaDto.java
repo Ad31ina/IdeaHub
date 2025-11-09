@@ -10,11 +10,12 @@ public class IdeaDto {
     private Double avgNovelty;
     private Double avgFeasibility;
     private OffsetDateTime createdAt;
+    private Long commentsCount;
 
     public IdeaDto() {
     }
 
-    public IdeaDto(Long id, String title, String description, UserDto author, Double avgNovelty, Double avgFeasibility, OffsetDateTime createdAt) {
+    public IdeaDto(Long id, String title, String description, UserDto author, Double avgNovelty, Double avgFeasibility, OffsetDateTime createdAt, Long commentsCount) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -22,6 +23,7 @@ public class IdeaDto {
         this.avgNovelty = avgNovelty;
         this.avgFeasibility = avgFeasibility;
         this.createdAt = createdAt;
+        this.commentsCount = commentsCount;
     }
 
     public Long getId() {
@@ -78,5 +80,13 @@ public class IdeaDto {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getCommentsCount() {
+        return commentsCount;
+    }
+
+    public void setCommentsCount(Long commentsCount) {
+        this.commentsCount = commentsCount;
     }
 }

@@ -18,7 +18,7 @@ public class Idea {
     @Column(nullable = false, length = 1000)
     private String description;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 

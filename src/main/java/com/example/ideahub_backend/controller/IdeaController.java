@@ -3,6 +3,7 @@ package com.example.ideahub_backend.controller;
 import com.example.ideahub_backend.dto.*;
 import com.example.ideahub_backend.model.Comment;
 import com.example.ideahub_backend.model.Idea;
+import com.example.ideahub_backend.repository.CommentRepository;
 import com.example.ideahub_backend.service.CommentService;
 import com.example.ideahub_backend.service.IdeaService;
 import com.example.ideahub_backend.service.RatingService;
@@ -26,6 +27,9 @@ public class IdeaController {
 
     @Autowired
     private CommentService commentService;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
 
     @PostMapping
@@ -111,6 +115,8 @@ public class IdeaController {
         );
         Double avgNovelty = idea.getAvgNovelty() != null ? idea.getAvgNovelty() : 0.0;
         Double avgFeasibility = idea.getAvgFeasibility() != null ? idea.getAvgFeasibility() : 0.0;
+
+        long commentsCount = commentRepository.countByIdeaId(idea);
         
         return new IdeaDto(
                 idea.getId(),
@@ -119,7 +125,8 @@ public class IdeaController {
                 author,
                 avgNovelty,
                 avgFeasibility,
-                idea.getCreatedAt()
+                idea.getCreatedAt(),
+                commentsCount
         );
     }
 
