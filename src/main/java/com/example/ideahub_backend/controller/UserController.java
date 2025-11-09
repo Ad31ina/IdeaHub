@@ -16,9 +16,10 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         return userService.getById(id)
-                .map(user -> ResponseEntity.ok(new UserDto(user.getId(), user.getUsername(), user.getEmail())))
+                .map(user -> new UserDto(user.getId(), user.getUsername(), user.getEmail()))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 }
