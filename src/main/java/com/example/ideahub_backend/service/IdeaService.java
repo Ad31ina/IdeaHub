@@ -1,6 +1,8 @@
 package com.example.ideahub_backend.service;
 
+import com.example.ideahub_backend.model.Comment;
 import com.example.ideahub_backend.model.Idea;
+import com.example.ideahub_backend.model.Rating;
 import com.example.ideahub_backend.model.User;
 import com.example.ideahub_backend.repository.CommentRepository;
 import com.example.ideahub_backend.repository.IdeaRepository;
@@ -21,8 +23,6 @@ import java.util.Optional;
 
 @Service
 public class IdeaService {
-    private static final Logger logger = LoggerFactory.getLogger(IdeaService.class);
-    
     @Autowired
     private IdeaRepository ideaRepository;
 
@@ -151,12 +151,12 @@ public class IdeaService {
             throw new RuntimeException("Нет прав на удаление этой идеи");
         }
 
-        List<com.example.ideahub_backend.model.Comment> comments = commentRepository.findByIdeaId(idea);
+        List<Comment> comments = commentRepository.findByIdeaId(idea);
         if (!comments.isEmpty()) {
             commentRepository.deleteAll(comments);
         }
 
-        List<com.example.ideahub_backend.model.Rating> ratings = ratingRepository.findByIdeaId(idea);
+        List<Rating> ratings = ratingRepository.findByIdeaId(idea);
         if (!ratings.isEmpty()) {
             ratingRepository.deleteAll(ratings);
         }
