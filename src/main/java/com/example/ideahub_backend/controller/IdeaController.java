@@ -4,6 +4,7 @@ import com.example.ideahub_backend.dto.*;
 import com.example.ideahub_backend.model.Comment;
 import com.example.ideahub_backend.model.Idea;
 import com.example.ideahub_backend.repository.CommentRepository;
+import com.example.ideahub_backend.repository.RatingRepository;
 import com.example.ideahub_backend.service.CommentService;
 import com.example.ideahub_backend.service.IdeaService;
 import com.example.ideahub_backend.service.RatingService;
@@ -30,6 +31,9 @@ public class IdeaController {
 
     @Autowired
     private CommentRepository commentRepository;
+
+    @Autowired
+    private RatingRepository ratingRepository;
 
 
     @PostMapping
@@ -121,8 +125,31 @@ public class IdeaController {
         );
         Double avgNovelty = idea.getAvgNovelty() != null ? idea.getAvgNovelty() : 0.0;
         Double avgFeasibility = idea.getAvgFeasibility() != null ? idea.getAvgFeasibility() : 0.0;
+        double averageRating = (avgNovelty + avgFeasibility) / 2.0;
 
         long commentsCount = commentRepository.countByIdeaId(idea);
+        long ratingsCount = ratingRepository.countByIdeaId(idea);
+
+        double trendScore = 0.0;
+        if (ratingsCount > 0) {
+            trendScore += averageRating * ratingsCount;
+        }
+        trendScore += commentsCount;
+
+        long likes = Math.round(trendScore);
+
+        String trend = "neutral";
+        if (ratingsCount > 0) {
+            if (averageRating >= 4.0) {
+                trend = "up";
+            } else if (averageRating <= 2.0) {
+                trend = "down";
+            } else {
+                trend = "neutral";
+            }
+        } else if (commentsCount > 0) {
+            trend = "up";
+        }
         
         return new IdeaDto(
                 idea.getId(),
@@ -131,8 +158,12 @@ public class IdeaController {
                 author,
                 avgNovelty,
                 avgFeasibility,
+                averageRating,
                 idea.getCreatedAt(),
-                commentsCount
+                commentsCount,
+                likes,
+                ratingsCount,
+                trend
         );
     }
 

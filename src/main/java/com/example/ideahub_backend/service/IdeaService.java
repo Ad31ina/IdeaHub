@@ -12,11 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class IdeaService {
@@ -58,9 +59,8 @@ public class IdeaService {
 
     public List<Idea> getTrendingIdeas() {
         List<Idea> ideas = ideaRepository.findAll();
+        Map<Long, TrendStats> statsByIdea = new HashMap<>();
 
-        Map<Idea, Map<String, Object>> ideaData = new HashMap<>();
-        
         for (Idea idea : ideas) {
             if (idea.getAvgNovelty() == null) {
                 idea.setAvgNovelty(0.0);
@@ -70,46 +70,43 @@ public class IdeaService {
             }
 
             long ratingsCount = ratingRepository.countByIdeaId(idea);
-
             long commentsCount = commentRepository.countByIdeaId(idea);
-
-            double avgRating = 0.0;
+            double averageRating = 0.0;
             if (ratingsCount > 0) {
-                avgRating = (idea.getAvgNovelty() + idea.getAvgFeasibility()) / 2.0;
+                averageRating = (idea.getAvgNovelty() + idea.getAvgFeasibility()) / 2.0;
             }
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("ratingsCount", ratingsCount);
-            data.put("commentsCount", commentsCount);
-            data.put("avgRating", avgRating);
-            ideaData.put(idea, data);
+            double trendScore = (averageRating * ratingsCount) + commentsCount;
+            statsByIdea.put(idea.getId(), new TrendStats(trendScore, ratingsCount, commentsCount));
         }
 
-        return ideas.stream()
-                .sorted((a, b) -> {
-                    Map<String, Object> dataA = ideaData.get(a);
-                    Map<String, Object> dataB = ideaData.get(b);
-                    
-                    long ratingsCountA = (Long) dataA.get("ratingsCount");
-                    long ratingsCountB = (Long) dataB.get("ratingsCount");
-                    long commentsCountA = (Long) dataA.get("commentsCount");
-                    long commentsCountB = (Long) dataB.get("commentsCount");
-                    double avgRatingA = (Double) dataA.get("avgRating");
-                    double avgRatingB = (Double) dataB.get("avgRating");
+        ideas.sort((a, b) -> {
+            TrendStats statsA = statsByIdea.get(a.getId());
+            TrendStats statsB = statsByIdea.get(b.getId());
 
-                    double scoreA = (avgRatingA * Math.max(1, ratingsCountA)) + commentsCountA;
-                    double scoreB = (avgRatingB * Math.max(1, ratingsCountB)) + commentsCountB;
+            int scoreCompare = Double.compare(statsB.trendScore(), statsA.trendScore());
+            if (scoreCompare != 0) {
+                return scoreCompare;
+            }
 
-                    if (ratingsCountA > 0 && ratingsCountB == 0) {
-                        return -1;
-                    }
-                    if (ratingsCountA == 0 && ratingsCountB > 0) {
-                        return 1;
-                    }
+            int ratingsCompare = Long.compare(statsB.ratingsCount(), statsA.ratingsCount());
+            if (ratingsCompare != 0) {
+                return ratingsCompare;
+            }
 
-                    return Double.compare(scoreB, scoreA);
-                })
-                .collect(Collectors.toList());
+            int commentsCompare = Long.compare(statsB.commentsCount(), statsA.commentsCount());
+            if (commentsCompare != 0) {
+                return commentsCompare;
+            }
+
+            OffsetDateTime createdAtA = a.getCreatedAt();
+            OffsetDateTime createdAtB = b.getCreatedAt();
+            Instant instantA = createdAtA != null ? createdAtA.toInstant() : Instant.EPOCH;
+            Instant instantB = createdAtB != null ? createdAtB.toInstant() : Instant.EPOCH;
+            return instantB.compareTo(instantA);
+        });
+
+        return ideas;
     }
 
     public Optional<Idea> getIdeaById(Long id) {
@@ -165,5 +162,8 @@ public class IdeaService {
         }
 
         ideaRepository.delete(idea);
+    }
+
+    private record TrendStats(double trendScore, long ratingsCount, long commentsCount) {
     }
 }
