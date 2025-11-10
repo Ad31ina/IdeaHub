@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface RatingRepository extends JpaRepository<Rating, Long> {
     Optional<Rating> findByIdeaIdAndUserId(Idea ideaId, User userId);
     List<Rating> findByIdeaId(Idea ideaId);
+    long countByIdeaId(Idea ideaId);
 }

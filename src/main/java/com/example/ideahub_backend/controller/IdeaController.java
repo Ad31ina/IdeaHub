@@ -40,12 +40,18 @@ public class IdeaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<IdeaDto>> getAllIdeas() {
-        List<IdeaDto> ideas = ideaService.getAllIdeas()
-                .stream()
+    public ResponseEntity<List<IdeaDto>> getAllIdeas(@RequestParam(required = false) String sort) {
+        List<Idea> ideas;
+        if ("trending".equals(sort)) {
+            ideas = ideaService.getTrendingIdeas();
+        } else {
+            ideas = ideaService.getAllIdeas();
+        }
+        
+        List<IdeaDto> ideaDtos = ideas.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ideas);
+        return ResponseEntity.ok(ideaDtos);
     }
 
     @GetMapping("/{id}")

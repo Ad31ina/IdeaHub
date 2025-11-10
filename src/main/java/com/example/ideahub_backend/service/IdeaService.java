@@ -12,8 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class IdeaService {
@@ -51,6 +54,62 @@ public class IdeaService {
             }
         });
         return ideas;
+    }
+
+    public List<Idea> getTrendingIdeas() {
+        List<Idea> ideas = ideaRepository.findAll();
+
+        Map<Idea, Map<String, Object>> ideaData = new HashMap<>();
+        
+        for (Idea idea : ideas) {
+            if (idea.getAvgNovelty() == null) {
+                idea.setAvgNovelty(0.0);
+            }
+            if (idea.getAvgFeasibility() == null) {
+                idea.setAvgFeasibility(0.0);
+            }
+
+            long ratingsCount = ratingRepository.countByIdeaId(idea);
+
+            long commentsCount = commentRepository.countByIdeaId(idea);
+
+            double avgRating = 0.0;
+            if (ratingsCount > 0) {
+                avgRating = (idea.getAvgNovelty() + idea.getAvgFeasibility()) / 2.0;
+            }
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("ratingsCount", ratingsCount);
+            data.put("commentsCount", commentsCount);
+            data.put("avgRating", avgRating);
+            ideaData.put(idea, data);
+        }
+
+        return ideas.stream()
+                .sorted((a, b) -> {
+                    Map<String, Object> dataA = ideaData.get(a);
+                    Map<String, Object> dataB = ideaData.get(b);
+                    
+                    long ratingsCountA = (Long) dataA.get("ratingsCount");
+                    long ratingsCountB = (Long) dataB.get("ratingsCount");
+                    long commentsCountA = (Long) dataA.get("commentsCount");
+                    long commentsCountB = (Long) dataB.get("commentsCount");
+                    double avgRatingA = (Double) dataA.get("avgRating");
+                    double avgRatingB = (Double) dataB.get("avgRating");
+
+                    double scoreA = (avgRatingA * Math.max(1, ratingsCountA)) + commentsCountA;
+                    double scoreB = (avgRatingB * Math.max(1, ratingsCountB)) + commentsCountB;
+
+                    if (ratingsCountA > 0 && ratingsCountB == 0) {
+                        return -1;
+                    }
+                    if (ratingsCountA == 0 && ratingsCountB > 0) {
+                        return 1;
+                    }
+
+                    return Double.compare(scoreB, scoreA);
+                })
+                .collect(Collectors.toList());
     }
 
     public Optional<Idea> getIdeaById(Long id) {
