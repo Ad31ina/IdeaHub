@@ -50,11 +50,11 @@ public class RatingService {
         Rating rating = new Rating(idea, user, novelty, feasibility);
         ratingRepository.save(rating);
 
-        List<Rating> allRatings = ratingRepository.findByIdeaId(idea);
+        List<Rating> allRatings = ratingRepository.findByIdeaId(idea); // все оценки для конкретной идеи
         double avgNovelty = allRatings.stream()
                 .mapToInt(Rating::getNovelty)
                 .average()
-                .orElse(0.0);
+                .orElse(0.0); //если никто не оценил 0.0
         double avgFeasibility = allRatings.stream()
                 .mapToInt(Rating::getFeasibility)
                 .average()

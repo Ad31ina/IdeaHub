@@ -50,7 +50,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser(Authentication authentication) {
-        if (authentication == null || authentication.getPrincipal() == null) {
+        if (authentication == null || authentication.getPrincipal() == null) { //getPrincipal()-авторизован
             return ResponseEntity.status(401).build();
         }
         
