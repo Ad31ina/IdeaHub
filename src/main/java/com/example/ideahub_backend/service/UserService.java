@@ -39,4 +39,31 @@ public class UserService {
     public Optional<User> getById(Long id) {
         return userRepository.findById(id);
     }
+
+    public User updateProfile(Long userId, String newUsername, String newEmail) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        if (newUsername != null) {
+            String trimmed = newUsername.trim();
+            if (!trimmed.isEmpty() && !trimmed.equals(user.getUsername())) {
+                if (userRepository.existsByUsernameAndIdNot(trimmed, userId)) {
+                    throw new RuntimeException("Имя пользователя уже занято");
+                }
+                user.setUsername(trimmed);
+            }
+        }
+
+        if (newEmail != null) {
+            String trimmed = newEmail.trim();
+            if (!trimmed.isEmpty() && !trimmed.equals(user.getEmail())) {
+                if (userRepository.existsByEmailAndIdNot(trimmed, userId)) {
+                    throw new RuntimeException("Email уже используется");
+                }
+                user.setEmail(trimmed);
+            }
+        }
+
+        return userRepository.save(user);
+    }
 }

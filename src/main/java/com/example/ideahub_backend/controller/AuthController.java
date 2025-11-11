@@ -1,6 +1,7 @@
 package com.example.ideahub_backend.controller;
 
 import com.example.ideahub_backend.dto.UserDto;
+import com.example.ideahub_backend.dto.UpdateProfileRequest;
 import com.example.ideahub_backend.model.User;
 import com.example.ideahub_backend.security.JwtUtils;
 import com.example.ideahub_backend.service.UserService;
@@ -10,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,6 +63,18 @@ public class AuthController {
                     return ResponseEntity.ok(dto);
                 })
                 .orElse(ResponseEntity.status(404).build());
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateCurrentUser(@RequestBody UpdateProfileRequest request, Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Long userId = (Long) authentication.getPrincipal();
+        User updated = userService.updateProfile(userId, request.getUsername(), request.getEmail());
+        UserDto dto = new UserDto(updated.getId(), updated.getUsername(), updated.getEmail());
+        return ResponseEntity.ok(dto);
     }
 
 }
