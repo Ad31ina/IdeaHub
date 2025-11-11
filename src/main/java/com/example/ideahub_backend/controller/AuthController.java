@@ -66,15 +66,30 @@ public class AuthController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<UserDto> updateCurrentUser(@RequestBody UpdateProfileRequest request, Authentication authentication) {
+    public ResponseEntity<?> updateCurrentUser(@RequestBody UpdateProfileRequest request, Authentication authentication) {
         if (authentication == null || authentication.getPrincipal() == null) {
             return ResponseEntity.status(401).build();
         }
 
         Long userId = (Long) authentication.getPrincipal();
-        User updated = userService.updateProfile(userId, request.getUsername(), request.getEmail());
-        UserDto dto = new UserDto(updated.getId(), updated.getUsername(), updated.getEmail());
-        return ResponseEntity.ok(dto);
+        return userService.getById(userId)
+                .map(existing -> {
+                    try {
+                        User updated = userService.updateProfile(userId, request.getUsername(), request.getEmail());
+                        UserDto dto = new UserDto(updated.getId(), updated.getUsername(), updated.getEmail());
+                        return ResponseEntity.ok(dto);
+                    } catch (RuntimeException ex) {
+                        String message = ex.getMessage();
+                        if ("Имя пользователя уже занято".equals(message) || "Email уже используется".equals(message)) {
+                            return ResponseEntity.status(409).body(message);
+                        }
+                        if ("Пользователь не найден".equals(message)) {
+                            return ResponseEntity.status(404).body(message);
+                        }
+                        return ResponseEntity.badRequest().body(message);
+                    }
+                })
+                .orElse(ResponseEntity.status(404).body("Пользователь не найден"));
     }
 
 }
